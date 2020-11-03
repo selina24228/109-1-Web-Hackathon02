@@ -25,17 +25,25 @@ class Sudoku extends Component {
 	checkValid = (row_index, col_index, num) => {
 		if(num === 0) return true;
 		else{
+			let conflictFlag = false;
 			// check row
 			for (let i = 0; i < 9; i++) {
-				if(i !== col_index && this.state.gridValues[row_index][col_index] === this.state.gridValues[row_index][i]) return false;
+				if(i !== col_index && num == this.state.gridValues[row_index][i]) conflictFlag = true;
 			}
 			// check column
 			for (let i = 0; i < 9; i++) {
-				if(i !== row_index && this.state.gridValues[row_index][col_index] === this.state.gridValues[i][col_index]) return false;
+				if(i !== row_index && num == this.state.gridValues[i][col_index]) conflictFlag = true;
 			}
 			// check grid_9x9
-			
-			return true;
+			// find left-top grid_1x1
+			let left_top_row_index = row_index - (row_index%3);
+			let left_top_col_index = col_index - (col_index%3);
+			for (let i = 0; i < 3; i++) {
+				for (let j = 0; j < 3; j++) {
+					if( (left_top_row_index+i) !== row_index && (left_top_col_index+j) !== col_index && num == this.state.gridValues[left_top_row_index+i][left_top_col_index+j]) conflictFlag = true;
+				}
+			}
+			return (!conflictFlag);
 		}
 	}
 
@@ -51,12 +59,12 @@ class Sudoku extends Component {
 
         if (this.state.gridValues !== null && this.state.selectedGrid.row_index !== -1 && this.state.selectedGrid.col_index !== -1 && (event.keyCode >= 48 && event.keyCode <= 57) || (event.keyCode >= 96 && event.keyCode <= 105)) {
 			if (this.state.problem.content[this.state.selectedGrid.row_index][this.state.selectedGrid.col_index] === "0") {
-				let newGridValue = this.state.gridValues.slice();
-				newGridValue[this.state.selectedGrid.row_index][this.state.selectedGrid.col_index] = ((event.keyCode >= 96)? event.keyCode-96 : event.keyCode-48);
-				if(newGridValue[this.state.selectedGrid.row_index][this.state.selectedGrid.col_index] === 0){
-					newGridValue[this.state.selectedGrid.row_index][this.state.selectedGrid.col_index] = null;
+				let newNum = ((event.keyCode >= 96)? event.keyCode-96 : event.keyCode-48);
+				if(this.checkValid(this.state.selectedGrid.row_index, this.state.selectedGrid.col_index, newNum)){
+					let newGridValue = this.state.gridValues.slice();	
+					newGridValue[this.state.selectedGrid.row_index][this.state.selectedGrid.col_index] = ((newNum === 0)? null : newNum);
+					this.setState({gridValues: newGridValue});
 				}
-				this.setState({gridValues: newGridValue});
 			}
 		}
     }
@@ -65,9 +73,11 @@ class Sudoku extends Component {
         // TODO
 		if (this.state.gridValues !== null && this.state.selectedGrid.row_index !== -1 && this.state.selectedGrid.col_index !== -1) {
 			if (this.state.problem.content[this.state.selectedGrid.row_index][this.state.selectedGrid.col_index] === "0") {
-				let newGridValue = this.state.gridValues.slice();
-				newGridValue[this.state.selectedGrid.row_index][this.state.selectedGrid.col_index] = ((num == 0)? null: num);
-				this.setState({gridValues: newGridValue});
+				if(this.checkValid(this.state.selectedGrid.row_index, this.state.selectedGrid.col_index, num)){
+					let newGridValue = this.state.gridValues.slice();
+					newGridValue[this.state.selectedGrid.row_index][this.state.selectedGrid.col_index] = ((num == 0)? null: num);
+					this.setState({gridValues: newGridValue});
+				}
 			}
 		}
     }
